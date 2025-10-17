@@ -23,34 +23,40 @@ const ADMIN_USER = process.env.ADMIN_USER || "admin";
 const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
 
 // CORS origins: env var CORS_ORIGIN optionally comma-separated, otherwise sensible defaults
+// const allowedOrigins = process.env.CORS_ORIGIN
+//   ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
+//   : [
+//       "http://localhost:5173",
+//       "http://localhost:4173",
+//       "https://manage-blogs.onrender.com",      // admin UI (example)
+//       "https://dynamic-website.vercel.app",    // public site (example)
+//       "https://your-frontend-domain.com"       // replace or add as needed
+//     ];
 const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
-  : [
-      "http://localhost:5173",
-      "http://localhost:4173",
-      "https://manage-blogs.onrender.com",      // admin UI (example)
-      "https://dynamic-website.vercel.app",    // public site (example)
-      "https://your-frontend-domain.com"       // replace or add as needed
-    ];
+  ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
+  : [];
 
 if (!MONGO_URI) {
-  console.error("❌ MONGO_URI not set. Configure .env or environment variables.");
+  console.error("MONGO_URI not set. Configure .env or environment variables.");
   process.exit(1);
 }
 
-// ---------- Middleware ----------
-app.use(express.json({ limit: "8mb" }));
+
 
 // robust CORS config (allows curl/postman when no origin)
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow tools like curl/postman
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      console.warn("CORS blocked for origin:", origin);
-      return callback(new Error("Not allowed by CORS"));
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        console.log("❌ CORS blocked for origin:", origin);
+        return callback(new Error("Not allowed by CORS"));
+      }
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
@@ -130,24 +136,32 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// ---------- DB connect & server start (start only after DB connected) ----------
-mongoose
-  .connect(MONGO_URI, {
-    dbName: process.env.DB_NAME || "dynamic-website-blogs",
-  })
-  .then(() => {
-    console.log("✅ MongoDB connected");
+// ---------- Middleware ----------
+app.use(express.json({ limit: "8mb" }));
 
-    // Start app only after DB is ready
-    app.listen(PORT, () => {
-      console.log(` Server running on port ${PORT}`);
-      console.log(" Allowed CORS origins:", allowedOrigins);
-    });
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB connection error:", err.message || err);
-    process.exit(1);
-  });
+// ---------- DB connect & server start (start only after DB connected) ----------
+// mongoose
+//   .connect(MONGO_URI, {
+//     dbName: process.env.DB_NAME || "dynamic-website-blogs",
+//   })
+//   .then(() => {
+//     console.log("✅ MongoDB connected");
+
+//     // Start app only after DB is ready
+//     app.listen(PORT, () => {
+//       console.log(` Server running on port ${PORT}`);
+//       console.log(" Allowed CORS origins:", allowedOrigins);
+//     });
+//   })
+//   .catch((err) => {
+//     console.error("❌ MongoDB connection error:", err.message || err);
+//     process.exit(1);
+//   });
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // ---------- Routes ----------
 
@@ -175,7 +189,7 @@ app.get("/api/blogs", async (req, res) => {
 });
 
 // Public: get single by id or slug
-app.get("/api/blogs/:identifier", async (req, res) => {
+app.get("/api/blogs/:id", async (req, res) => {
   try {
     const idOrSlug = req.params.identifier;
     let blog = null;
@@ -218,7 +232,7 @@ app.post("/api/blogs", authenticateToken, async (req, res) => {
 });
 
 // Update blog (protected)
-app.put("/api/blogs/:identifier", authenticateToken, async (req, res) => {
+app.put("/api/blogs/:id", authenticateToken, async (req, res) => {
   try {
     const idOrSlug = req.params.identifier;
     const update = req.body;
@@ -239,7 +253,7 @@ app.put("/api/blogs/:identifier", authenticateToken, async (req, res) => {
 });
 
 // Delete blog (protected)
-app.delete("/api/blogs/:identifier", authenticateToken, async (req, res) => {
+app.delete("/api/blogs/:id", authenticateToken, async (req, res) => {
   try {
     const idOrSlug = req.params.identifier;
     let result = null;
@@ -299,7 +313,7 @@ app.get("/api/secure-blogs", authenticateToken, (req, res) => {
   res.json({ message: "Protected data", user: req.user });
 });
 
-
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 
 
