@@ -12,20 +12,19 @@ import csv from "csv-parser";
 import jwt from "jsonwebtoken";
 import { fileURLToPath } from 'url';
 
-// NOTE: You must provide a valid Blog model in ./models/Blog.js
 import Blog from "./models/Blog.js"; 
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ----------------- CONFIG / ENV -----------------
-const PORT = process.env.PORT; // Must rely on Render's assigned port
+const PORT = process.env.PORT; 
 const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET || "mySuperSecretKey";
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
 const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
 
-// CORS origins: Ensure that the environment variable is parsed correctly.
+// CORS origins: Ensuring robustness in parsing
 const allowedOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
     : [
@@ -35,33 +34,38 @@ const allowedOrigins = process.env.CORS_ORIGIN
         "https://dynamic-website.onrender.com",
     ];
 
-// Diagnostic log to confirm origins being used at startup
 console.log("CORS Allowed Origins in Use:", allowedOrigins);
       
 if (allowedOrigins.length === 0) {
     console.warn("WARNING: CORS_ORIGIN list is empty. Using * for testing.");
-    // Fallback to allow everything if list is empty (for debugging only)
     allowedOrigins.push('*');
 }
 
 // ----------------- MIDDLEWARE (Order is CRITICAL) -----------------
 
-// 1. CORS Middleware (Handle preflight OPTIONS and set headers)
+// === CRITICAL FIX: Explicitly handle preflight OPTIONS requests ===
+// This function manually sets the critical preflight headers for any route
+app.options('*', cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes('*')) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        callback(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// 1. CORS Middleware (Runs for all actual requests: GET, POST, etc.)
 app.use(
     cors({
         origin: function (origin, callback) {
-            // Allow requests with no origin (like mobile apps, postman, curl)
             if (!origin || allowedOrigins.includes('*')) return callback(null, true);
-            
             if (allowedOrigins.includes(origin)) return callback(null, true);
-            
-            console.warn(`CORS blocked for origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
             callback(new Error("Not allowed by CORS"));
         },
-        // IMPORTANT: Must explicitly list methods for preflight (OPTIONS) requests
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
         credentials: true,
-        // Set specific headers if needed, though usually handled by browser
         allowedHeaders: ['Content-Type', 'Authorization'],
     })
 );
@@ -71,7 +75,6 @@ app.use(express.json({ limit: "8mb" }));
 
 
 // ---------- Upload (CSV) setup ----------
-// Use __dirname for robustness in ESM
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -320,9 +323,6 @@ mongoose
     .then(() => {
         console.log("✅ MongoDB connected");
         
-        // CRITICAL: START SERVER ONLY ONCE AFTER SUCCESSFUL DB CONNECTION
-        // If PORT is undefined (no ENV set), it will crash on start, 
-        // but Render guarantees PORT will be set for a Web Service.
         app.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
         });
@@ -331,8 +331,6 @@ mongoose
         console.error("❌ MongoDB connection error:", err.message || err);
         process.exit(1); 
     });
-
-
 
 
 
