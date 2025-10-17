@@ -111,40 +111,40 @@ function BlogForm() {
   // };
 
   // ✅ Submit form to backend
-    // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-//     const payload = {
-//       ...blog,
-//       blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
-//       points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
-//     };
+    const payload = {
+      ...blog,
+      blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
+      points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
+    };
 
-//     // const res = await fetch("http://localhost:4000/api/blogs/manual", {
-//     //   method: "POST",
-//     //   headers: { "Content-Type": "application/json" },
-//     //   body: JSON.stringify(payload),
-//     // });
+    // const res = await fetch("http://localhost:4000/api/blogs/manual", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify(payload),
+    // });
     
     
-// const res = await fetch(`${API_BASE_URL}/api/blogs/manual`, {
-// // const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`, {
-//   method: "POST",
-//   headers: { "Content-Type": "application/json" },
-//   body: JSON.stringify(payload),
-// });
+const res = await fetch(`https://dynamic-blog-server.onrender.com/api/blogs/manual`, {
+// const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload),
+});
 
 
-//     if (res.ok) {
-//       alert("✅ Blog added successfully!");
-//       setBlog(initialState);
-//     } else {
-//       const err = await res.json();
-//       alert("❌ Error: " + err.message);
-//     }
-//   };
+    if (res.ok) {
+      alert("✅ Blog added successfully!");
+      setBlog(initialState);
+    } else {
+      const err = await res.json();
+      alert("❌ Error: " + err.message);
+    }
+  };
 
 // const handleSubmit = async (e) => {
 //     e.preventDefault();
@@ -189,40 +189,39 @@ function BlogForm() {
 //     }
 // };
 
-// Blogform.jsx
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    const payload = {
-        ...blog,
-        blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
-        points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
-    };
+// const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     const payload = {
+//         ...blog,
+//         blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
+//         points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
+//     };
 
-    try {
-        // Use a default empty string if VITE_API_BASE_URL is undefined 
-        // (to avoid concatenation issues if the variable fails to inject)
-        const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+//     try {
+//         // Use a default empty string if VITE_API_BASE_URL is undefined 
+//         // (to avoid concatenation issues if the variable fails to inject)
+//         const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
         
-        // This will form the correct URL: 
-        // e.g., https://dynamic-blog-server.onrender.com/api/blogs/manual
-        const apiUrl = `${BASE_URL}/api/blogs/manual`;
+//         // This will form the correct URL: 
+//         // e.g., https://dynamic-blog-server.onrender.com/api/blogs/manual
+//         const apiUrl = `${BASE_URL}/api/blogs/manual`;
         
-        console.log("Attempting to POST to:", apiUrl); // Check this in the browser console
+//         console.log("Attempting to POST to:", apiUrl); // Check this in the browser console
 
-        const res = await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-        });
-console.log(res)
-        // ... rest of success/error handling ...
+//         const res = await fetch(apiUrl, {
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.stringify(payload),
+//         });
+// console.log(res)
+//         // ... rest of success/error handling ...
         
-    } catch (e) {
-        console.error("Network or Fetch Error:", e);
-        alert(`❌ Network Error: Could not connect to the API. (Check Console)`);
-    }
-};
+//     } catch (e) {
+//         console.error("Network or Fetch Error:", e);
+//         alert(`❌ Network Error: Could not connect to the API. (Check Console)`);
+//     }
+// };
   return (
     <form onSubmit={handleSubmit} style={{ width: "100%" }}>
       <h2>Add New Blog</h2>

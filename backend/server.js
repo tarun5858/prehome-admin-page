@@ -140,8 +140,8 @@ mongoose
 
     // Start app only after DB is ready
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log("🔗 Allowed CORS origins:", allowedOrigins);
+      console.log(` Server running on port ${PORT}`);
+      console.log(" Allowed CORS origins:", allowedOrigins);
     });
   })
   .catch((err) => {
