@@ -113,38 +113,38 @@ function BlogForm() {
   // ✅ Submit form to backend
     // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
 
-    const payload = {
-      ...blog,
-      blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
-      points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
-    };
+//     const payload = {
+//       ...blog,
+//       blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
+//       points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
+//     };
 
-    const res = await fetch("http://localhost:4000/api/blogs/manual", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+//     const res = await fetch("http://localhost:4000/api/blogs/manual", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(payload),
+//     });
     
     
-// const res = await fetch(`${API_BASE_URL}/api/blogs/manual`, {
-// const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`, {
-//   method: "POST",
-//   headers: { "Content-Type": "application/json" },
-//   body: JSON.stringify(payload),
-// });
+// // const res = await fetch(`${API_BASE_URL}/api/blogs/manual`, {
+// // const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`, {
+// //   method: "POST",
+// //   headers: { "Content-Type": "application/json" },
+// //   body: JSON.stringify(payload),
+// // });
 
 
-    if (res.ok) {
-      alert("✅ Blog added successfully!");
-      setBlog(initialState);
-    } else {
-      const err = await res.json();
-      alert("❌ Error: " + err.message);
-    }
-  };
+//     if (res.ok) {
+//       alert("✅ Blog added successfully!");
+//       setBlog(initialState);
+//     } else {
+//       const err = await res.json();
+//       alert("❌ Error: " + err.message);
+//     }
+//   };
 
 // const handleSubmit = async (e) => {
 //     e.preventDefault();
@@ -223,6 +223,70 @@ function BlogForm() {
 //         alert(`❌ Network Error: Could not connect to the API. (Check Console)`);
 //     }
 // };
+
+
+const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // The payload preparation logic looks correct
+    const payload = {
+        ...blog,
+        blogTags: blog.blogTags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
+        points: blog.points
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
+    };
+
+    try {
+        // === CRITICAL FIX: Base URL Selection ===
+        // Determine the environment. If the frontend is running on localhost, use the local backend port.
+        const isLocal = 
+            window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1';
+
+        const BASE_URL = isLocal
+            ? "http://localhost:4000" // Backend runs on 4000 locally
+            : import.meta.env.VITE_API_BASE_URL || "https://dynamic-blog-server.onrender.com";
+
+        const apiUrl = `${BASE_URL}/api/blogs/manual`;
+        console.log("📡 Posting to:", apiUrl);
+
+        // === CRITICAL BUG FIX: Correct JSON.stringify usage ===
+        const res = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            // FIX: Removed the incorrect second argument from JSON.stringify
+            body: JSON.stringify(payload), 
+        });
+
+        // Response handling
+        if (res.ok) {
+            // NOTE: Replace alert() with a modal/message box in a real app
+            alert("✅ Blog added successfully!"); 
+            setBlog(initialState);
+        } else {
+            let errorMessage = "Unknown error";
+            try {
+                const err = await res.json();
+                errorMessage = err.message || JSON.stringify(err);
+            } catch {
+                errorMessage = await res.text();
+            }
+            alert("❌ Error: " + errorMessage);
+            console.error("❌ Blog creation failed:", errorMessage);
+        }
+    } catch (err) {
+        console.error("❌ Network or Fetch Error:", err);
+        alert("❌ Network error: Could not connect to API.");
+    }
+};
+
   return (
     <form onSubmit={handleSubmit} style={{ width: "100%" }}>
       <h2>Add New Blog</h2>
