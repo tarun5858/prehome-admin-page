@@ -44,6 +44,7 @@ app.use(
       console.warn("CORS blocked for origin:", origin);
       callback(new Error("Not allowed by CORS"));
     },
+    methods: ["GET", "POST", "PUT", "DELETE"], // <-- CRITICAL ADDITION
     credentials: true,
   })
 );
@@ -130,6 +131,7 @@ console.log("🔍 MONGO_URI is:", process.env.MONGO_URI);
 
 mongoose
   .connect(MONGO_URI, {
+    dbName: process.env.DB_NAME || "dynamic-website-blogs",
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
