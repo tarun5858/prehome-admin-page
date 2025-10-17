@@ -111,7 +111,7 @@ function BlogForm() {
   // };
 
   // ✅ Submit form to backend
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+    // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
@@ -146,9 +146,53 @@ function BlogForm() {
 //     }
 //   };
 
+// const handleSubmit = async (e) => {
+//     e.preventDefault();
+
+//     const payload = {
+//         ...blog,
+//         blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
+//         points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
+//     };
+
+//     try {
+//         // --- FIX: Use the VITE variable directly for the deployed URL ---
+//         const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`;
+        
+//         console.log("Attempting to POST to:", apiUrl); // Add this for deployment debugging
+
+//         const res = await fetch(apiUrl, {
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.stringify(payload),
+//         });
+
+//         if (res.ok) {
+//             alert("✅ Blog added successfully!");
+//             setBlog(initialState);
+//         } else {
+//             // Check if the response body is JSON before trying to parse it
+//             const contentType = res.headers.get("content-type");
+//             if (contentType && contentType.includes("application/json")) {
+//                 const err = await res.json();
+//                 alert(`❌ Error (${res.status}): ${err.message || "Server error"}`);
+//             } else {
+//                 // Handle non-JSON errors (like 500 internal server error from the server)
+//                 const text = await res.text();
+//                 alert(`❌ Error (${res.status}): ${text.substring(0, 100)}... (Check server logs)`);
+//             }
+//         }
+//     } catch (e) {
+//         // This will catch the 'Failed to fetch' network error
+//         console.error("Network or Fetch Error:", e);
+//         alert(`❌ Network Error: Could not connect to the API. (Check Console)`);
+//     }
+// };
+
+// Blogform.jsx
+
 const handleSubmit = async (e) => {
     e.preventDefault();
-
     const payload = {
         ...blog,
         blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
@@ -156,34 +200,25 @@ const handleSubmit = async (e) => {
     };
 
     try {
-        // --- FIX: Use the VITE variable directly for the deployed URL ---
-        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`;
+        // Use a default empty string if VITE_API_BASE_URL is undefined 
+        // (to avoid concatenation issues if the variable fails to inject)
+        const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
         
-        console.log("Attempting to POST to:", apiUrl); // Add this for deployment debugging
+        // This will form the correct URL: 
+        // e.g., https://dynamic-blog-server.onrender.com/api/blogs/manual
+        const apiUrl = `${BASE_URL}/api/blogs/manual`;
+        
+        console.log("Attempting to POST to:", apiUrl); // Check this in the browser console
 
         const res = await fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
-
-        if (res.ok) {
-            alert("✅ Blog added successfully!");
-            setBlog(initialState);
-        } else {
-            // Check if the response body is JSON before trying to parse it
-            const contentType = res.headers.get("content-type");
-            if (contentType && contentType.includes("application/json")) {
-                const err = await res.json();
-                alert(`❌ Error (${res.status}): ${err.message || "Server error"}`);
-            } else {
-                // Handle non-JSON errors (like 500 internal server error from the server)
-                const text = await res.text();
-                alert(`❌ Error (${res.status}): ${text.substring(0, 100)}... (Check server logs)`);
-            }
-        }
+console.log(res)
+        // ... rest of success/error handling ...
+        
     } catch (e) {
-        // This will catch the 'Failed to fetch' network error
         console.error("Network or Fetch Error:", e);
         alert(`❌ Network Error: Could not connect to the API. (Check Console)`);
     }
