@@ -1,10 +1,12 @@
-// server.js (ESM - FINAL FIXED VERSION)
+// server.js (ESM - FINAL MANUAL CORS INJECTION)
 
 import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
-import cors from "cors";
+// We no longer need the standard 'cors' library, but keep the import if other packages rely on it, 
+// though we will replace its usage with manual middleware below.
+import cors from "cors"; 
 import mongoose from "mongoose";
 import multer from "multer";
 import path from "path";
@@ -26,45 +28,50 @@ const JWT_SECRET = process.env.JWT_SECRET || "mySuperSecretKey";
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
 const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
 
-// ----------------- CORS CONFIGURATION -----------------
+// Define the origins we MUST allow
 const allowedOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
     : [
         "http://localhost:5173",
-        "http://localhost:4173",
         "https://manage-blogs.onrender.com",
         "https://dynamic-website.onrender.com",
     ];
 
 console.log("CORS Allowed Origins in Use:", allowedOrigins);
 
-const corsOptions = {
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes('*')) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        
-        console.warn(`CORS blocked for origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
-        callback(null, false); 
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
-};
-
 
 // ----------------- MIDDLEWARE (Order is CRITICAL - TOP PRIORITY) -----------------
 
-// 1. CRITICAL FIX: Explicitly handle preflight OPTIONS requests for ALL routes
-app.options('*', cors(corsOptions));
+// 1. **FINAL SOLUTION: MANUAL CORS HEADER INJECTION**
+// This middleware manually checks and sets the CORS headers for every request.
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    
+    // Check if the request origin is in our allowed list
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    } else if (allowedOrigins.includes(req.header('referer'))) {
+        // Fallback check using referer header
+        res.setHeader('Access-Control-Allow-Origin', req.header('referer'));
+    }
 
-// 2. Main CORS Middleware (Handles actual requests)
-app.use(cors(corsOptions));
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    
+    // For preflight OPTIONS requests, we respond immediately to guarantee success.
+    if (req.method === 'OPTIONS') {
+        // 204 No Content is standard for successful OPTIONS response
+        return res.sendStatus(204); 
+    }
+    next();
+});
 
-// 3. Body Parser (MUST come after CORS)
+// 2. Body Parser (MUST come after the manual header application)
 app.use(express.json({ limit: "8mb" })); 
 
 
-// ----------------- MULTER / UPLOAD SETUP (MOVED TO TOP TO FIX REFERENCE ERROR) -----------------
+// ----------------- MULTER / UPLOAD SETUP -----------------
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -333,8 +340,6 @@ mongoose
         console.error("❌ MongoDB connection error:", err.message || err);
         process.exit(1); 
     });
-
-
 
 
 
