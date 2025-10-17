@@ -113,39 +113,81 @@ function BlogForm() {
   // ✅ Submit form to backend
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
-  const handleSubmit = async (e) => {
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+
+//     const payload = {
+//       ...blog,
+//       blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
+//       points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
+//     };
+
+//     // const res = await fetch("http://localhost:4000/api/blogs/manual", {
+//     //   method: "POST",
+//     //   headers: { "Content-Type": "application/json" },
+//     //   body: JSON.stringify(payload),
+//     // });
+    
+    
+// const res = await fetch(`${API_BASE_URL}/api/blogs/manual`, {
+// // const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`, {
+//   method: "POST",
+//   headers: { "Content-Type": "application/json" },
+//   body: JSON.stringify(payload),
+// });
+
+
+//     if (res.ok) {
+//       alert("✅ Blog added successfully!");
+//       setBlog(initialState);
+//     } else {
+//       const err = await res.json();
+//       alert("❌ Error: " + err.message);
+//     }
+//   };
+
+const handleSubmit = async (e) => {
     e.preventDefault();
 
     const payload = {
-      ...blog,
-      blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
-      points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
+        ...blog,
+        blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
+        points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
     };
 
-    // const res = await fetch("http://localhost:4000/api/blogs/manual", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(payload),
-    // });
-    
-    
-const res = await fetch(`${API_BASE_URL}/api/blogs/manual`, {
-// const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(payload),
-});
+    try {
+        // --- FIX: Use the VITE variable directly for the deployed URL ---
+        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`;
+        
+        console.log("Attempting to POST to:", apiUrl); // Add this for deployment debugging
 
+        const res = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
 
-    if (res.ok) {
-      alert("✅ Blog added successfully!");
-      setBlog(initialState);
-    } else {
-      const err = await res.json();
-      alert("❌ Error: " + err.message);
+        if (res.ok) {
+            alert("✅ Blog added successfully!");
+            setBlog(initialState);
+        } else {
+            // Check if the response body is JSON before trying to parse it
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                const err = await res.json();
+                alert(`❌ Error (${res.status}): ${err.message || "Server error"}`);
+            } else {
+                // Handle non-JSON errors (like 500 internal server error from the server)
+                const text = await res.text();
+                alert(`❌ Error (${res.status}): ${text.substring(0, 100)}... (Check server logs)`);
+            }
+        }
+    } catch (e) {
+        // This will catch the 'Failed to fetch' network error
+        console.error("Network or Fetch Error:", e);
+        alert(`❌ Network Error: Could not connect to the API. (Check Console)`);
     }
-  };
-
+};
   return (
     <form onSubmit={handleSubmit} style={{ width: "100%" }}>
       <h2>Add New Blog</h2>
