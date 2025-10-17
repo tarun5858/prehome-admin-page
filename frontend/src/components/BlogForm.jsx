@@ -58,12 +58,12 @@ function BlogForm() {
 
   const [blog, setBlog] = useState(initialState);
 
-  // ✅ Basic field update
+  //  Basic field update
   const handleChange = (e) => {
     setBlog({ ...blog, [e.target.name]: e.target.value });
   };
 
-  // ✅ Add new Name-Benefit pair
+  //  Add new Name-Benefit pair
   const addNameBenefitPair = (headKey, sectionIndex) => {
     const updated = [...blog[headKey]];
     updated[sectionIndex].name.push("");
@@ -71,14 +71,14 @@ function BlogForm() {
     setBlog({ ...blog, [headKey]: updated });
   };
 
-  // ✅ Add new entire section
+  //  Add new entire section
   const addSubttileSection = (headKey) => {
     const updated = [...blog[headKey]];
     updated.push({ beforeContent: "", name: [""], benefits: [""], afterContent: "" });
     setBlog({ ...blog, [headKey]: updated });
   };
 
-  // ✅ Add a benefit to a specific section and name index
+  //  Add a benefit to a specific section and name index
   // const addBenefitToName = (headKey, sectionIndex, nameIndex) => {
   //   const updated = [...blog[headKey]];
   //   if (!updated[sectionIndex].benefits) updated[sectionIndex].benefits = [];
@@ -86,31 +86,15 @@ function BlogForm() {
   //   setBlog({ ...blog, [headKey]: updated });
   // };
 
-  // ✅ Handle imagePositions change
+  // Handle imagePositions change
   const handleImagePositionChange = (index, field, value) => {
     const updated = [...blog.imagePositions];
     updated[index][field] = value;
     setBlog({ ...blog, imagePositions: updated });
   };
 
-  // ✅ Add new imagePosition row
-  // const addImagePosition = () => {
-  //   setBlog({
-  //     ...blog,
-  //     imagePositions: [
-  //       ...blog.imagePositions,
-  //       { section: "", imageKey: "", position: "" },
-  //     ],
-  //   });
-  // };
 
-  // ✅ Remove imagePosition row
-  // const removeImagePosition = (index) => {
-  //   const updated = blog.imagePositions.filter((_, i) => i !== index);
-  //   setBlog({ ...blog, imagePositions: updated });
-  // };
-
-  // ✅ Submit form to backend
+  // Submit form to backend
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
 
   const handleSubmit = async (e) => {

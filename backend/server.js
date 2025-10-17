@@ -32,9 +32,12 @@ const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
 //       "https://dynamic-website.vercel.app",    // public site (example)
 //       "https://your-frontend-domain.com"       // replace or add as needed
 //     ];
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
-  : [];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "https://manage-blogs.onrender.com",
+  "https://dynamic-website.onrender.com",
+];
 
 if (!MONGO_URI) {
   console.error("MONGO_URI not set. Configure .env or environment variables.");
@@ -44,25 +47,47 @@ if (!MONGO_URI) {
 
 
 // robust CORS config (allows curl/postman when no origin)
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        console.log("❌ CORS blocked for origin:", origin);
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin) return callback(null, true);
+//       if (allowedOrigins.includes(origin)) {
+//         return callback(null, true);
+//       } else {
+//         console.log("❌ CORS blocked for origin:", origin);
+//         return callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//     credentials: true,
+//   })
+// );
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  // Always set these headers for preflight
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    // ✅ Critical: end OPTIONS request early
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 // respond to preflight globally
 app.options("*", cors());
+
+// ---------- Middleware ----------
+app.use(express.json({ limit: "8mb" }));
 
 // ---------- Upload (CSV) setup ----------
 const uploadDir = path.join(process.cwd(), "uploads");
@@ -136,8 +161,7 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// ---------- Middleware ----------
-app.use(express.json({ limit: "8mb" }));
+
 
 // ---------- DB connect & server start (start only after DB connected) ----------
 // mongoose
