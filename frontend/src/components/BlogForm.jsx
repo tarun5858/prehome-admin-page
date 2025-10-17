@@ -128,7 +128,7 @@ function BlogForm() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload,{ title: "My Blog Title", content: "Some content" }),
     });
 
     // ✅ Step 4: Response handling
