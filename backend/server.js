@@ -318,9 +318,9 @@ app.get("/api/secure-blogs", authenticateToken, (req, res) => {
   res.json({ message: "Protected data", user: req.user });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`🚀 Server running on port ${PORT}`);
+// });
 
 
 
