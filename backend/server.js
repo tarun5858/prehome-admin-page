@@ -16,7 +16,7 @@ import Blog from "./models/Blog.js"; // make sure models/Blog.js exists and expo
 const app = express();
 
 // ---------- Config / env ----------
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT;
 const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET || "mySuperSecretKey";
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
