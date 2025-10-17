@@ -1,5 +1,4 @@
-// server.js (ESM - FINAL CORS DIAGNOSTIC)
-// This structure prioritizes Express and CORS initialization above all else.
+// server.js (ESM - FINAL FIXED VERSION)
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -45,7 +44,6 @@ const corsOptions = {
         if (allowedOrigins.includes(origin)) return callback(null, true);
         
         console.warn(`CORS blocked for origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
-        // We do NOT return an error here to see if the main middleware catches it.
         callback(null, false); 
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
@@ -57,7 +55,6 @@ const corsOptions = {
 // ----------------- MIDDLEWARE (Order is CRITICAL - TOP PRIORITY) -----------------
 
 // 1. CRITICAL FIX: Explicitly handle preflight OPTIONS requests for ALL routes
-// This MUST come before app.use(cors())
 app.options('*', cors(corsOptions));
 
 // 2. Main CORS Middleware (Handles actual requests)
@@ -67,17 +64,33 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: "8mb" })); 
 
 
-// ----------------- ERROR HANDLING (New Diagnostic Middleware) -----------------
-// Catches unhandled errors that crash the request thread prematurely
+// ----------------- MULTER / UPLOAD SETUP (MOVED TO TOP TO FIX REFERENCE ERROR) -----------------
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) =>
+        cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, "_")}`),
+});
+const upload = multer({ storage });
+// --------------------------------------------------------------------------------------------
+
+
+// ----------------- ERROR HANDLING (Diagnostic Middleware) -----------------
 app.use((err, req, res, next) => {
-    console.error("UNHANDLED REQUEST ERROR:", err.stack);
-    if (!res.headersSent) {
-        res.status(500).json({ error: "Internal Server Error during request processing." });
+    if (err) {
+        console.error("UNHANDLED REQUEST ERROR:", err.stack);
+        if (!res.headersSent) {
+            res.status(500).json({ error: "Internal Server Error during request processing." });
+        }
+    } else {
+        next();
     }
 });
 
 
-// ----------------- DB CONNECTION (MUST be outside app.use/app.get/app.post blocks) -----------------
+// ----------------- DB CONNECTION -----------------
 if (!MONGO_URI) {
     console.error("MONGO_URI not set. Exiting.");
     process.exit(1);
@@ -85,7 +98,6 @@ if (!MONGO_URI) {
 
 
 // ----------------- HELPER FUNCTIONS / AUTH MIDDLEWARE -----------------
-// ... (Helper functions slugify, reconstructNestedObject, cleanIds, authenticateToken go here) ...
 function slugify(text = "") {
     return String(text)
         .toLowerCase()
@@ -145,7 +157,6 @@ function authenticateToken(req, res, next) {
     });
 }
 // ----------------- ROUTES -----------------
-// ... (Routes go here, using the structure from the previous file) ...
 // health
 app.get("/", (req, res) => res.send("🚀 Dynamic Blog Server is running"));
 
@@ -259,7 +270,7 @@ app.delete("/api/blogs/:identifier", authenticateToken, async (req, res) => {
     }
 });
 
-// CSV upload (protected)
+// CSV upload (protected) - THIS ROUTE NOW WORKS BECAUSE 'upload' IS DEFINED
 app.post("/api/upload", authenticateToken, upload.single("csv"), (req, res) => {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
@@ -305,18 +316,8 @@ app.get("/api/secure-blogs", authenticateToken, (req, res) => {
     res.json({ message: "Protected data", user: req.user });
 });
 
-// ---------- Upload (CSV) setup (moved near routes that use it) ----------
-const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) =>
-        cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, "_")}`),
-});
-const upload = multer({ storage });
-
-// ----------------- DB CONNECTION & SERVER START (LAST EXECUTING BLOCK) -----------------
+// ----------------- SERVER START (LAST EXECUTING BLOCK) -----------------
 mongoose
     .connect(MONGO_URI, {
         dbName: process.env.DB_NAME || "dynamic-website-blogs",
@@ -332,7 +333,6 @@ mongoose
         console.error("❌ MongoDB connection error:", err.message || err);
         process.exit(1); 
     });
-
 
 
 
