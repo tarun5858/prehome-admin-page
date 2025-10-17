@@ -1,4 +1,6 @@
-// server.js (ESM - Final CORS Fix)
+// server.js (ESM - FINAL CORS DIAGNOSTIC)
+// This structure prioritizes Express and CORS initialization above all else.
+
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -12,6 +14,7 @@ import csv from "csv-parser";
 import jwt from "jsonwebtoken";
 import { fileURLToPath } from 'url';
 
+// NOTE: You must provide a valid Blog model in ./models/Blog.js
 import Blog from "./models/Blog.js"; 
 
 const app = express();
@@ -24,7 +27,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "mySuperSecretKey";
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
 const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
 
-// CORS origins: Ensuring robustness in parsing
+// ----------------- CORS CONFIGURATION -----------------
 const allowedOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
     : [
@@ -35,59 +38,54 @@ const allowedOrigins = process.env.CORS_ORIGIN
     ];
 
 console.log("CORS Allowed Origins in Use:", allowedOrigins);
-      
-if (allowedOrigins.length === 0) {
-    console.warn("WARNING: CORS_ORIGIN list is empty. Using * for testing.");
-    allowedOrigins.push('*');
-}
 
-// ----------------- MIDDLEWARE (Order is CRITICAL) -----------------
-
-// === CRITICAL FIX: Explicitly handle preflight OPTIONS requests ===
-// This function manually sets the critical preflight headers for any route
-app.options('*', cors({
+const corsOptions = {
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes('*')) return callback(null, true);
         if (allowedOrigins.includes(origin)) return callback(null, true);
-        callback(new Error("Not allowed by CORS"));
+        
+        console.warn(`CORS blocked for origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
+        // We do NOT return an error here to see if the main middleware catches it.
+        callback(null, false); 
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+};
 
-// 1. CORS Middleware (Runs for all actual requests: GET, POST, etc.)
-app.use(
-    cors({
-        origin: function (origin, callback) {
-            if (!origin || allowedOrigins.includes('*')) return callback(null, true);
-            if (allowedOrigins.includes(origin)) return callback(null, true);
-            callback(new Error("Not allowed by CORS"));
-        },
-        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
-        credentials: true,
-        allowedHeaders: ['Content-Type', 'Authorization'],
-    })
-);
 
-// 2. Body Parser (Handles request body - MUST come AFTER CORS)
+// ----------------- MIDDLEWARE (Order is CRITICAL - TOP PRIORITY) -----------------
+
+// 1. CRITICAL FIX: Explicitly handle preflight OPTIONS requests for ALL routes
+// This MUST come before app.use(cors())
+app.options('*', cors(corsOptions));
+
+// 2. Main CORS Middleware (Handles actual requests)
+app.use(cors(corsOptions));
+
+// 3. Body Parser (MUST come after CORS)
 app.use(express.json({ limit: "8mb" })); 
 
 
-// ---------- Upload (CSV) setup ----------
-const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) =>
-        cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, "_")}`),
+// ----------------- ERROR HANDLING (New Diagnostic Middleware) -----------------
+// Catches unhandled errors that crash the request thread prematurely
+app.use((err, req, res, next) => {
+    console.error("UNHANDLED REQUEST ERROR:", err.stack);
+    if (!res.headersSent) {
+        res.status(500).json({ error: "Internal Server Error during request processing." });
+    }
 });
-const upload = multer({ storage });
+
+
+// ----------------- DB CONNECTION (MUST be outside app.use/app.get/app.post blocks) -----------------
+if (!MONGO_URI) {
+    console.error("MONGO_URI not set. Exiting.");
+    process.exit(1);
+}
 
 
 // ----------------- HELPER FUNCTIONS / AUTH MIDDLEWARE -----------------
-
+// ... (Helper functions slugify, reconstructNestedObject, cleanIds, authenticateToken go here) ...
 function slugify(text = "") {
     return String(text)
         .toLowerCase()
@@ -146,10 +144,8 @@ function authenticateToken(req, res, next) {
         next();
     });
 }
-
-
 // ----------------- ROUTES -----------------
-
+// ... (Routes go here, using the structure from the previous file) ...
 // health
 app.get("/", (req, res) => res.send("🚀 Dynamic Blog Server is running"));
 
@@ -309,13 +305,18 @@ app.get("/api/secure-blogs", authenticateToken, (req, res) => {
     res.json({ message: "Protected data", user: req.user });
 });
 
+// ---------- Upload (CSV) setup (moved near routes that use it) ----------
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) =>
+        cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, "_")}`),
+});
+const upload = multer({ storage });
 
 // ----------------- DB CONNECTION & SERVER START (LAST EXECUTING BLOCK) -----------------
-if (!MONGO_URI) {
-    console.error("MONGO_URI not set. Exiting.");
-    process.exit(1);
-}
-
 mongoose
     .connect(MONGO_URI, {
         dbName: process.env.DB_NAME || "dynamic-website-blogs",
@@ -331,7 +332,6 @@ mongoose
         console.error("❌ MongoDB connection error:", err.message || err);
         process.exit(1); 
     });
-
 
 
 
