@@ -148,9 +148,11 @@ mongoose
         console.log(" MongoDB connected");
         
         // CRITICAL: START SERVER ONLY AFTER SUCCESSFUL DB CONNECTION
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
+        setTimeout(() => {
+            app.listen(PORT, () => {
+                console.log(`🚀 Server running on port ${PORT}`);
+            });
+        }, 1000);
     })
     .catch((err) => {
         console.error(" MongoDB connection error:", err.message || err);
