@@ -34,7 +34,7 @@ const allowedOrigins = process.env.CORS_ORIGIN
 
     // Ensure the array only contains valid strings and is not empty
 if (allowedOrigins.length === 0) {
-    console.error("CORS_ORIGIN environment variable is empty or improperly formatted.");
+    console.error("CORS_ORIGIN environment variable is empty or improperly formatted.",allowedOrigins);
 }
 
 
