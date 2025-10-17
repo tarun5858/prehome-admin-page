@@ -11,52 +11,52 @@ import fs from "fs";
 import csv from "csv-parser";
 import jwt from "jsonwebtoken";
 
-import Blog from "./models/Blog.js"; // make sure models/Blog.js exists and exports default
+import Blog from "./models/Blog.js";
 
 const app = express();
 
 // ---------- Config / env ----------
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET || "mySuperSecretKey";
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
 const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
 
-// CORS origins: provide comma-separated CORS_ORIGIN in env or default list
+// CORS origins: env var CORS_ORIGIN optionally comma-separated, otherwise sensible defaults
 const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim())
+  ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
   : [
       "http://localhost:5173",
       "http://localhost:4173",
-      "https://manage-blogs.onrender.com",
-      "https://dynamic-website.onrender.com",
+      "https://manage-blogs.onrender.com",      // admin UI (example)
+      "https://dynamic-website.vercel.app",    // public site (example)
+      "https://your-frontend-domain.com"       // replace or add as needed
     ];
 
-    // Ensure the array only contains valid strings and is not empty
-if (allowedOrigins.length === 0) {
-    console.error("CORS_ORIGIN environment variable is empty or improperly formatted.",allowedOrigins);
+if (!MONGO_URI) {
+  console.error("❌ MONGO_URI not set. Configure .env or environment variables.");
+  process.exit(1);
 }
 
+// ---------- Middleware ----------
+app.use(express.json({ limit: "8mb" }));
 
-
+// robust CORS config (allows curl/postman when no origin)
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow Postman / curl (no origin)
-      if (!origin) return callback(null, true);
+      if (!origin) return callback(null, true); // allow tools like curl/postman
       if (allowedOrigins.includes(origin)) return callback(null, true);
       console.warn("CORS blocked for origin:", origin);
-      callback(new Error("Not allowed by CORS"));
+      return callback(new Error("Not allowed by CORS"));
     },
-    methods: ["GET", "POST", "PUT", "DELETE"], // <-- CRITICAL ADDITION
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
 
-
-// ---------- Middleware ----------
-app.use(express.json({ limit: "8mb" })); // adjust if you need larger payloads
-
+// respond to preflight globally
+app.options("*", cors());
 
 // ---------- Upload (CSV) setup ----------
 const uploadDir = path.join(process.cwd(), "uploads");
@@ -69,7 +69,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ---------- Helper functions ----------
+// ---------- Helpers ----------
 function slugify(text = "") {
   return String(text)
     .toLowerCase()
@@ -78,7 +78,6 @@ function slugify(text = "") {
     .replace(/\s+/g, "-");
 }
 
-// Reconstruct nested objects from flattened CSV keys (e.g., subttileHead[0].name[1])
 function reconstructNestedObject(flatObj) {
   const result = {};
   for (const key in flatObj) {
@@ -118,7 +117,7 @@ function cleanIds(obj) {
   }
 }
 
-// ---------- Auth middleware ----------
+// ---------- Auth ----------
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -131,46 +130,36 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// ---------- DB connection ----------
-if (!MONGO_URI) {
-  console.error("MONGO_URI not set. Please configure .env or environment variables.");
-  process.exit(1);
-}
-console.log("🔍 MONGO_URI is:", process.env.MONGO_URI);
-
+// ---------- DB connect & server start (start only after DB connected) ----------
 mongoose
   .connect(MONGO_URI, {
     dbName: process.env.DB_NAME || "dynamic-website-blogs",
-    // useNewUrlParser: true,
-    // useUnifiedTopology: true,
   })
   .then(() => {
-        console.log(" MongoDB connected");
-        
-        // CRITICAL: START SERVER ONLY AFTER SUCCESSFUL DB CONNECTION
-        setTimeout(() => {
-            app.listen(PORT, () => {
-                console.log(`🚀 Server running on port ${PORT}`);
-            });
-        }, 1000);
-    })
-    .catch((err) => {
-        console.error(" MongoDB connection error:", err.message || err);
-        // Exit process if DB connection fails
-        process.exit(1); 
+    console.log("✅ MongoDB connected");
+
+    // Start app only after DB is ready
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log("🔗 Allowed CORS origins:", allowedOrigins);
     });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err.message || err);
+    process.exit(1);
+  });
 
 // ---------- Routes ----------
-// health
-app.get("/", (req, res) => res.send(" Dynamic Blog Server is running"));
 
-// Public: list blogs (with optional pagination & tag)
+// health
+app.get("/", (req, res) => res.json({ ok: true, message: "Dynamic Blog Server is running" }));
+
+// Public: list blogs (pagination & optional tag)
 app.get("/api/blogs", async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page || "1", 10));
     const limit = Math.max(1, parseInt(req.query.limit || "20", 10));
     const skip = (page - 1) * limit;
-
     const filter = {};
     if (req.query.tag) filter.blogTags = req.query.tag;
 
@@ -178,7 +167,6 @@ app.get("/api/blogs", async (req, res) => {
       Blog.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
       Blog.countDocuments(filter),
     ]);
-
     res.json({ data: blogs, page, limit, total });
   } catch (err) {
     console.error("GET /api/blogs error:", err);
@@ -191,13 +179,9 @@ app.get("/api/blogs/:identifier", async (req, res) => {
   try {
     const idOrSlug = req.params.identifier;
     let blog = null;
-
-    if (mongoose.Types.ObjectId.isValid(idOrSlug)) {
-      blog = await Blog.findById(idOrSlug);
-    }
+    if (mongoose.Types.ObjectId.isValid(idOrSlug)) blog = await Blog.findById(idOrSlug);
     if (!blog) blog = await Blog.findOne({ slug: idOrSlug });
     if (!blog) return res.status(404).json({ message: "Blog not found" });
-
     res.json(blog);
   } catch (err) {
     console.error("GET /api/blogs/:id error:", err);
@@ -205,26 +189,25 @@ app.get("/api/blogs/:identifier", async (req, res) => {
   }
 });
 
-// Public: manual blog post (used by admin form if unprotected)
+// Public manual form endpoint (keeps existing frontend working)
 app.post("/api/blogs/manual", async (req, res) => {
   try {
     const blog = new Blog(req.body);
     if (!blog.slug && blog.title) blog.slug = slugify(blog.title);
     await blog.save();
-    res.status(201).json({ message: "Blog created successfully (manual form)", blog });
+    res.status(201).json({ message: "Blog created (manual)", blog });
   } catch (err) {
     console.error("POST /api/blogs/manual error:", err);
     res.status(400).json({ message: err.message || "Bad request" });
   }
 });
 
-// Protected create (recommended) - uses JWT
+// Protected create (recommended)
 app.post("/api/blogs", authenticateToken, async (req, res) => {
   try {
     const blogData = req.body;
     cleanIds(blogData);
     if (!blogData.slug && blogData.title) blogData.slug = slugify(blogData.title);
-
     const newBlog = new Blog(blogData);
     await newBlog.save();
     res.status(201).json({ message: "Blog created", blog: newBlog });
@@ -246,9 +229,7 @@ app.put("/api/blogs/:identifier", authenticateToken, async (req, res) => {
     if (mongoose.Types.ObjectId.isValid(idOrSlug)) {
       blog = await Blog.findByIdAndUpdate(idOrSlug, update, { new: true });
     }
-    if (!blog) {
-      blog = await Blog.findOneAndUpdate({ slug: idOrSlug }, update, { new: true });
-    }
+    if (!blog) blog = await Blog.findOneAndUpdate({ slug: idOrSlug }, update, { new: true });
     if (!blog) return res.status(404).json({ message: "Blog not found" });
     res.json({ message: "Blog updated", blog });
   } catch (err) {
@@ -262,9 +243,7 @@ app.delete("/api/blogs/:identifier", authenticateToken, async (req, res) => {
   try {
     const idOrSlug = req.params.identifier;
     let result = null;
-    if (mongoose.Types.ObjectId.isValid(idOrSlug)) {
-      result = await Blog.findByIdAndDelete(idOrSlug);
-    }
+    if (mongoose.Types.ObjectId.isValid(idOrSlug)) result = await Blog.findByIdAndDelete(idOrSlug);
     if (!result) result = await Blog.findOneAndDelete({ slug: idOrSlug });
     if (!result) return res.status(404).json({ message: "Blog not found" });
     res.json({ message: "Blog deleted" });
@@ -290,20 +269,20 @@ app.post("/api/upload", authenticateToken, upload.single("csv"), (req, res) => {
     .on("end", async () => {
       try {
         await Blog.insertMany(results, { ordered: false });
-        // cleanup uploaded file
+        // remove uploaded file
         fs.unlink(req.file.path, (err) => {
-          if (err) console.warn("Failed to remove CSV file:", err);
+          if (err) console.warn("Failed to delete CSV upload:", err);
         });
         res.json({ message: "CSV data saved to MongoDB successfully", inserted: results.length });
       } catch (err) {
         console.error("CSV insert error:", err);
         fs.unlink(req.file.path, () => {});
-        res.status(500).json({ message: "Error inserting CSV data (see server logs)", error: err.message });
+        res.status(500).json({ message: "Error inserting CSV data (see server logs)", error: err.message || err });
       }
     });
 });
 
-// Login endpoint
+// Login endpoint (admin)
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ success: false, message: "Username and password required" });
@@ -320,9 +299,7 @@ app.get("/api/secure-blogs", authenticateToken, (req, res) => {
   res.json({ message: "Protected data", user: req.user });
 });
 
-// app.listen(PORT, () => {
-//   console.log(`🚀 Server running on port ${PORT}`);
-// });
+
 
 
 
