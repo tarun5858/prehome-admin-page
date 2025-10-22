@@ -252,8 +252,8 @@ const handleSubmit = async (e) => {
             ? "http://localhost:4000" // Backend runs on 4000 locally
             : import.meta.env.VITE_API_BASE_URL || "https://dynamic-blog-server.onrender.com";
 
-        const apiUrl = `${BASE_URL}/api/blogs`;
-        console.log("📡 Posting to:", apiUrl);
+        const apiUrl = `${BASE_URL}/api/blogs/manual`;
+        console.log(" Posting to:", apiUrl);
 
         // === CRITICAL BUG FIX: Correct JSON.stringify usage ===
         const res = await fetch(apiUrl, {
