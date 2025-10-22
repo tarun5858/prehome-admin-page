@@ -39,6 +39,22 @@ const allowedOrigins = process.env.CORS_ORIGIN
 
 console.log("CORS Allowed Origins in Use:", allowedOrigins);
 
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ CORS blocked for origin:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
 
 // ----------------- MIDDLEWARE (Order is CRITICAL - TOP PRIORITY) -----------------
 
