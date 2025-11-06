@@ -15,6 +15,10 @@ import csv from "csv-parser";
 import jwt from "jsonwebtoken";
 import { fileURLToPath } from 'url';
 
+
+
+import {authUser} from "./Middlewares/auth.js"
+
 // NOTE: You must provide a valid Blog model in ./models/Blog.js
 import Blog from "./models/Blog.js"; 
 
@@ -32,11 +36,12 @@ const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
 const allowedOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
     : [
-        "http://localhost:5173",
+        "http://localhost:5174",
         "https://manage-blogs.onrender.com",
         "https://dynamic-website.onrender.com",
+        "https://dynamic-blog-server-g5ea.onrender.com"
     ];
-
+// /api/login
 console.log("CORS Allowed Origins in Use:", allowedOrigins);
 
 app.use(
@@ -323,7 +328,7 @@ app.post("/api/upload", authenticateToken, upload.single("csv"), (req, res) => {
 });
 
 // Login endpoint
-app.post("/api/login", (req, res) => {
+app.post("/api/login",authUser, (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ success: false, message: "Username and password required" });
 
