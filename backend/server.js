@@ -3,7 +3,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-// import express from "express";
+import express from "express";
 // We no longer need the standard 'cors' library, but keep the import if other packages rely on it, 
 // though we will replace its usage with manual middleware below.
 import cors from "cors"; 
@@ -14,11 +14,6 @@ import fs from "fs";
 import csv from "csv-parser";
 import jwt from "jsonwebtoken";
 import { fileURLToPath } from 'url';
-
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const express = require('express'); // Uses the temporary require() function
-
 
 import {authUser} from "./Middlewares/auth.js"
 

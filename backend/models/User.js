@@ -1,10 +1,9 @@
 // const mongoose = require('mongoose');
 import jwt from "jsonwebtoken";
-
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const { validatorErrorSymbol } = require('mongoose/lib/helpers/symbols');
-
+// const { validatorErrorSymbol } = require('mongoose/lib/helpers/symbols');
+import validatorErrorSymbol from "mongoose";
 import mongoose from "mongoose";
 const validator = require('validator');
 
@@ -49,11 +48,11 @@ const UserSchema = new mongoose.Schema({
     age:{
         type: Number,
         min:18,     
-        // validate(value){
-        //     if(!validatorErrorSymbol.isInt(value)){
-        //         throw new Error('Invalid Age')
-        //     }
-        // }  
+        validate(value){
+            if(!validatorErrorSymbol.isInt(value)){
+                throw new Error('Invalid Age')
+            }
+        }  
     },
     gender:{
         type: String,
