@@ -16,8 +16,8 @@ import jwt from "jsonwebtoken";
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcrypt';
 // export default router;
-// import authRoutes from "./routes/authRoutes.js"
-import router from "./routes/authRoutes.js"
+import authRoutes from "./routes/authRoutes.js"
+
 import  authRequired  from "./Middlewares/authMiddleware.js"
 // import {authUser} from "./Middlewares/auth.js"
 
@@ -47,7 +47,7 @@ const allowedOrigins = process.env.CORS_ORIGIN
 // /api/login
 console.log("CORS Allowed Origins in Use:", allowedOrigins);
 
-app.use("/api/auth", router);
+app.use("/api/auth", authRoutes);
 
 
 app.use(
