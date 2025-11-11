@@ -179,7 +179,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs/promises"; // promise-based fs
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { sendEmail } from "../utils/sendEmail.js";
 
 const router = express.Router();

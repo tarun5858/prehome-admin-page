@@ -14,7 +14,7 @@ import fs from "fs";
 import csv from "csv-parser";
 import jwt from "jsonwebtoken";
 import { fileURLToPath } from 'url';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 // export default router;
 import authRoutes from "./routes/authRoutes.js"
 
