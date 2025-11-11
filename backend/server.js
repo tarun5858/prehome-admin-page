@@ -14,8 +14,12 @@ import fs from "fs";
 import csv from "csv-parser";
 import jwt from "jsonwebtoken";
 import { fileURLToPath } from 'url';
-
-import {authUser} from "./Middlewares/auth.js"
+import bcrypt from 'bcrypt';
+// export default router;
+// import authRoutes from "./routes/authRoutes.js"
+import router from "./routes/authRoutes.js"
+import  authRequired  from "./Middlewares/authMiddleware.js"
+// import {authUser} from "./Middlewares/auth.js"
 
 // NOTE: You must provide a valid Blog model in ./models/Blog.js
 import Blog from "./models/Blog.js"; 
@@ -28,7 +32,8 @@ const PORT = process.env.PORT;
 const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET || "mySuperSecretKey";
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
-const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
+// const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
+let adminPassHash = process.env.ADMIN_PASS_HASH || "$2b$10$w0X2YF.gE8S0tF/QY7N5iO5dG.K0x0fR.Z9pT"; 
 
 // Define the origins we MUST allow
 const allowedOrigins = process.env.CORS_ORIGIN
@@ -41,6 +46,9 @@ const allowedOrigins = process.env.CORS_ORIGIN
     ];
 // /api/login
 console.log("CORS Allowed Origins in Use:", allowedOrigins);
+
+app.use("/api/auth", router);
+
 
 app.use(
   cors({
@@ -171,19 +179,45 @@ function cleanIds(obj) {
     }
 }
 
+// function authenticateToken(req, res, next) {
+//     const authHeader = req.headers["authorization"];
+//     const token = authHeader && authHeader.split(" ")[1];
+//     if (!token) return res.status(401).json({ error: "Missing token" });
+
+//     jwt.verify(token, JWT_SECRET, (err, user) => {
+//         if (err) return res.status(403).json({ error: "Invalid token" });
+//         req.user = user;
+//         next();
+//     });
+// }
+
 function authenticateToken(req, res, next) {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
+    
     if (!token) return res.status(401).json({ error: "Missing token" });
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: "Invalid token" });
+        if (err) return res.status(403).json({ error: "Invalid or expired token" });
+        
+        // Ensure the token belongs to the admin user
+        if (user.username !== ADMIN_USER) {
+             return res.status(403).json({ error: "Access denied." });
+        }
+        
         req.user = user;
         next();
     });
 }
 // ----------------- ROUTES -----------------
 // health
+app.get("/api/secret", authRequired, (req, res) => {
+  res.json({ secret: "only for admins", user: req.user });
+});
+app.get("/health", (req, res) => res.json({ ok: true }));
+
+
+
 app.get("/", (req, res) => res.send("🚀 Dynamic Blog Server is running"));
 
 // Public: list blogs (with optional pagination & tag)
@@ -326,16 +360,69 @@ app.post("/api/upload", authenticateToken, upload.single("csv"), (req, res) => {
 });
 
 // Login endpoint
-app.post("/api/login",authUser, (req, res) => {
+// app.post("/api/login",authenticateToken, (req, res) => {
+//     const { username, password } = req.body;
+//     if (!username || !password) return res.status(400).json({ success: false, message: "Username and password required" });
+
+//     if (username === ADMIN_USER && password === ADMIN_PASS_HASH) {
+//         const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "6h" });
+//         return res.json({ success: true, token });
+//     }
+//     return res.status(401).json({ success: false, message: "Invalid credentials" });
+// });
+app.post("/api/auth/login", async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ success: false, message: "Username and password required" });
 
-    if (username === ADMIN_USER && password === ADMIN_PASS) {
-        const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "6h" });
-        return res.json({ success: true, token });
+    if (username === ADMIN_USER) {
+        // CRITICAL: Use bcrypt.compare() to check the plaintext password against the stored hash
+        const isMatch = await bcrypt.compare(password, adminPassHash);
+
+        if (isMatch) {
+            const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "6h" });
+            return res.json({ success: true, token });
+        }
     }
+    // Generic failure message for security
     return res.status(401).json({ success: false, message: "Invalid credentials" });
 });
+
+
+// 2. NEW ENDPOINT: CHANGE ADMIN PASSWORD (Protected)
+app.post("/api/admin/change-password", authenticateToken, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ success: false, message: "Current and new password required." });
+    }
+    
+    // Step 1: Verify the CURRENT password against the stored hash
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, adminPassHash);
+    
+    if (!isCurrentPasswordValid) {
+        return res.status(401).json({ success: false, message: "Invalid current password." });
+    }
+
+    // Step 2: Hash the new password
+    // Use a salt rounds of 10 (standard and secure)
+    const newHash = await bcrypt.hash(newPassword, 10);
+    
+    // Step 3: Update the in-memory hash
+    adminPassHash = newHash;
+    
+    // IMPORTANT NOTE: In a real application, you would save this newHash 
+    // to a persistent database store (e.g., a MongoDB User model).
+    // Since we are using ENV variables for simplicity, we only update the runtime variable.
+    
+    console.log(` Admin password successfully changed in memory. New hash: ${newHash.substring(0, 30)}...`);
+    
+    return res.json({ 
+        success: true, 
+        message: "Password changed successfully. You may need to log in again." 
+    });
+});
+
+
 
 // Protected test endpoint
 app.get("/api/secure-blogs", authenticateToken, (req, res) => {
@@ -349,14 +436,14 @@ mongoose
         dbName: process.env.DB_NAME || "dynamic-website-blogs",
     })
     .then(() => {
-        console.log("✅ MongoDB connected");
+        console.log(" MongoDB connected");
         
         app.listen(PORT, () => {
-            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(` Server running on port ${PORT}`);
         });
     })
     .catch((err) => {
-        console.error("❌ MongoDB connection error:", err.message || err);
+        console.error(" MongoDB connection error:", err.message || err);
         process.exit(1); 
     });
 

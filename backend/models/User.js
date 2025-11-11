@@ -1,89 +1,77 @@
-// const mongoose = require('mongoose');
-import jwt from "jsonwebtoken";
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-// const { validatorErrorSymbol } = require('mongoose/lib/helpers/symbols');
-import validatorErrorSymbol from "mongoose";
-import mongoose from "mongoose";
-const validator = require('validator');
+// import mongoose from "mongoose";
+// import jwt from "jsonwebtoken";
+// import validator from "validator";
 
+// const UserSchema = new mongoose.Schema({
+//     id: {
+//         type: String,
+//     },
+//     name: {
+//         type: String,
+//         required: true,
+//         minlength: 4,
+//         maxlength: 50
+//     },
+//     email: {
+//         type: String,
+//         required: true,
+//         unique: true,
+//         lowercase: true,
+//         trim: true,
+//         validate(value) {
+//             if (!validator.isEmail(value)) {
+//                 throw new Error('Invalid Email: ' + value);
+//             }
+//         }
+//     },
+//     password: {
+//         type: String,
+//         validate(value) {
+//             if (!validator.isStrongPassword(value)) {
+//                 throw new Error('Weak Password');
+//             }
+//         }
+//     },
+//     about: {
+//         type: String,
+//         default: "I am a user of Prehome",
+//     },
+//     age: {
+//         type: Number,
+//         min: 18,
+//         validate(value) {
+//             if (!Number.isInteger(value)) {
+//                 throw new Error('Invalid Age');
+//             }
+//         }
+//     },
+//     gender: {
+//         type: String,
+//         validate(value) {
+//             if (!['Male', 'Female', 'male', 'female', 'Other'].includes(value)) {
+//                 throw new Error('Invalid Gender');
+//             }
+//         },
+//     },
+//     photo_url: {
+//         type: String,
+//         trim: true,
+//         validate(value) {
+//             if (value && !validator.isURL(value)) {
+//                 throw new Error('Invalid Photo URL: ' + value);
+//             }
+//         },
+//     },
+//     Skills: {
+//         type: [String],
+//         default: [],
+//     },
+// });
 
-const UserSchema = new mongoose.Schema({
-    id:{
-        type: String,
+// UserSchema.methods.getJWT = async function () {
+//     const user = this;
+//     const token = jwt.sign({ _id: user._id }, "Prehome@123", { expiresIn: "2d" });
+//     return token;
+// };
 
-    },
-    name: {
-        type: String,
-        required: true,
-        minlength: 4,
-        maxlength: 50
-        
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true,
-       validate(value){
-        if(!validator.isEmail(value)){
-            throw new Error('Invalid Email' + value);
-        }
-       }
-    },
-    password: {
-        type: String,
-        // validate(value){
-        //     if(validator.isStrongPassword(value)){
-        //         throw new Error('Weak Password')
-        //     }
-        // }
-        
-    },
-    about:{
-        type: String,
-        default: "I am a user of Prehome",
-    },
-    age:{
-        type: Number,
-        min:18,     
-        validate(value){
-            if(!validatorErrorSymbol.isInt(value)){
-                throw new Error('Invalid Age')
-            }
-        }  
-    },
-    gender:{
-        type: String,
-        validate(value){
-            if(!['Male', 'Female','male', 'female', 'Other'].includes(value)){
-                throw new Error('Invalid Gender') //works with every post request::
-            }
-        },
-    },
-    photo_url: {
-        type: String,
-        trim: true,
-        validate(value) {
-            if (value && !validator.isURL(value)) {
-                throw new Error('Invalid Photo URL: ' + value);
-            }
-        },
-    },
-    Skills: {
-        type: Array,
-        default: [],
-    },
-});
-
-UserSchema.methods.getJWT = async function(){
-    const user = this;
-    const token = jwt.sign({_id:user._id}, "Prehome@123",{expiresIn:"2d"});
-    return token;
-}
-
-
-// module.exports = mongoose.model('User', UserSchema);
-const User = mongoose.model('User', UserSchema);
-export default User;
+// export default mongoose.model("User", UserSchema);
