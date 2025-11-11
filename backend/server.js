@@ -16,7 +16,7 @@ import jwt from "jsonwebtoken";
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 // export default router;
-import authRoutes from "./routes/authRoutes.js"
+import authRoutes from "./routes/router.js"
 
 import  authRequired  from "./Middlewares/authMiddleware.js"
 // import {authUser} from "./Middlewares/auth.js"
