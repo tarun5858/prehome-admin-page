@@ -24,6 +24,7 @@ import  authRequired  from "./Middlewares/authMiddleware.js"
 // NOTE: You must provide a valid Blog model in ./models/Blog.js
 import Blog from "./models/Blog.js"; 
 dotenv.config();
+
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
