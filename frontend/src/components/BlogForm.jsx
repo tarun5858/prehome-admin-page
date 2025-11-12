@@ -39,7 +39,7 @@ function BlogForm() {
     finalword3: "",
     nextSeries: "",
 
-    // ✅ All subtitles + arrays
+    //  All subtitles + arrays
     subtitle: "",
     subttileHead: [{ beforeContent: "", name: [""], benefits: [""], afterContent: "" }],
     subtitle1: "",
@@ -58,12 +58,12 @@ function BlogForm() {
 
   const [blog, setBlog] = useState(initialState);
 
-  // ✅ Basic field update
+  // Basic field update
   const handleChange = (e) => {
     setBlog({ ...blog, [e.target.name]: e.target.value });
   };
 
-  // ✅ Add new Name-Benefit pair
+  // Add new Name-Benefit pair
   const addNameBenefitPair = (headKey, sectionIndex) => {
     const updated = [...blog[headKey]];
     updated[sectionIndex].name.push("");
@@ -71,158 +71,19 @@ function BlogForm() {
     setBlog({ ...blog, [headKey]: updated });
   };
 
-  // ✅ Add new entire section
+  // Add new entire section
   const addSubttileSection = (headKey) => {
     const updated = [...blog[headKey]];
     updated.push({ beforeContent: "", name: [""], benefits: [""], afterContent: "" });
     setBlog({ ...blog, [headKey]: updated });
   };
 
-  // ✅ Add a benefit to a specific section and name index
-  // const addBenefitToName = (headKey, sectionIndex, nameIndex) => {
-  //   const updated = [...blog[headKey]];
-  //   if (!updated[sectionIndex].benefits) updated[sectionIndex].benefits = [];
-  //   updated[sectionIndex].benefits.push("");
-  //   setBlog({ ...blog, [headKey]: updated });
-  // };
 
-  // ✅ Handle imagePositions change
   const handleImagePositionChange = (index, field, value) => {
     const updated = [...blog.imagePositions];
     updated[index][field] = value;
     setBlog({ ...blog, imagePositions: updated });
   };
-
-  // ✅ Add new imagePosition row
-  // const addImagePosition = () => {
-  //   setBlog({
-  //     ...blog,
-  //     imagePositions: [
-  //       ...blog.imagePositions,
-  //       { section: "", imageKey: "", position: "" },
-  //     ],
-  //   });
-  // };
-
-  // ✅ Remove imagePosition row
-  // const removeImagePosition = (index) => {
-  //   const updated = blog.imagePositions.filter((_, i) => i !== index);
-  //   setBlog({ ...blog, imagePositions: updated });
-  // };
-
-  // ✅ Submit form to backend
-    // const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     const payload = {
-//       ...blog,
-//       blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
-//       points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
-//     };
-
-//     const res = await fetch("http://localhost:4000/api/blogs/manual", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify(payload),
-//     });
-    
-    
-// // const res = await fetch(`${API_BASE_URL}/api/blogs/manual`, {
-// // const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`, {
-// //   method: "POST",
-// //   headers: { "Content-Type": "application/json" },
-// //   body: JSON.stringify(payload),
-// // });
-
-
-//     if (res.ok) {
-//       alert("✅ Blog added successfully!");
-//       setBlog(initialState);
-//     } else {
-//       const err = await res.json();
-//       alert("❌ Error: " + err.message);
-//     }
-//   };
-
-// const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     const payload = {
-//         ...blog,
-//         blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
-//         points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
-//     };
-
-//     try {
-//         // --- FIX: Use the VITE variable directly for the deployed URL ---
-//         const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/blogs/manual`;
-        
-//         console.log("Attempting to POST to:", apiUrl); // Add this for deployment debugging
-
-//         const res = await fetch(apiUrl, {
-//             method: "POST",
-//             headers: { "Content-Type": "application/json" },
-//             body: JSON.stringify(payload),
-//         });
-
-//         if (res.ok) {
-//             alert("✅ Blog added successfully!");
-//             setBlog(initialState);
-//         } else {
-//             // Check if the response body is JSON before trying to parse it
-//             const contentType = res.headers.get("content-type");
-//             if (contentType && contentType.includes("application/json")) {
-//                 const err = await res.json();
-//                 alert(`❌ Error (${res.status}): ${err.message || "Server error"}`);
-//             } else {
-//                 // Handle non-JSON errors (like 500 internal server error from the server)
-//                 const text = await res.text();
-//                 alert(`❌ Error (${res.status}): ${text.substring(0, 100)}... (Check server logs)`);
-//             }
-//         }
-//     } catch (e) {
-//         // This will catch the 'Failed to fetch' network error
-//         console.error("Network or Fetch Error:", e);
-//         alert(`❌ Network Error: Could not connect to the API. (Check Console)`);
-//     }
-// };
-
-// Blogform.jsx
-
-// const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     const payload = {
-//         ...blog,
-//         blogTags: blog.blogTags.split(",").map((t) => t.trim()).filter(Boolean),
-//         points: blog.points.split(",").map((t) => t.trim()).filter(Boolean),
-//     };
-
-//     try {
-//         // Use a default empty string if VITE_API_BASE_URL is undefined 
-//         // (to avoid concatenation issues if the variable fails to inject)
-//         const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-        
-//         // This will form the correct URL: 
-//         // e.g., https://dynamic-blog-server.onrender.com/api/blogs/manual
-//         const apiUrl = `${BASE_URL}/api/blogs/manual`;
-        
-//         console.log("Attempting to POST to:", apiUrl); // Check this in the browser console
-
-//         const res = await fetch(apiUrl, {
-//             method: "POST",
-//             headers: { "Content-Type": "application/json" },
-//             body: JSON.stringify(payload),
-//         });
-// console.log(res)
-//         // ... rest of success/error handling ...
-        
-//     } catch (e) {
-//         console.error("Network or Fetch Error:", e);
-//         alert(`❌ Network Error: Could not connect to the API. (Check Console)`);
-//     }
-// };
 
 
 const handleSubmit = async (e) => {
@@ -278,12 +139,12 @@ const handleSubmit = async (e) => {
             } catch {
                 errorMessage = await res.text();
             }
-            alert("❌ Error: " + errorMessage);
-            console.error("❌ Blog creation failed:", errorMessage);
+            alert("Error: " + errorMessage);
+            console.error("Blog creation failed:", errorMessage);
         }
     } catch (err) {
-        console.error("❌ Network or Fetch Error:", err);
-        alert("❌ Network error: Could not connect to API.");
+        console.error(" Network or Fetch Error:", err);
+        alert(" Network error: Could not connect to API.");
     }
 };
 
@@ -461,7 +322,7 @@ const handleSubmit = async (e) => {
 
       
 
-      {/* ✅ Save Blog */}
+      {/* Save Blog */}
       <button
         type="submit"
         style={{

@@ -22,7 +22,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* <Manageblogs /> */}
            <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>

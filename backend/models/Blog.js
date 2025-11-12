@@ -25,9 +25,19 @@ const blogSchema = new mongoose.Schema(
   {
     id: { type: Number },
     title: { type: String, required: true },
-    slug: { type: String, index: true, unique: true, sparse: true, lowercase: true, trim: true },
+    slug: {
+      type: String,
+      index: true,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true,
+    },
     description: { type: String },
-    date: { type: String, default: () => new Date().toLocaleDateString("en-GB") },
+    date: {
+      type: String,
+      default: () => new Date().toLocaleDateString("en-GB"),
+    },
     likes: { type: Number, default: 0 },
     readTime: { type: Number, default: 5 },
     blogTags: [{ type: String }],

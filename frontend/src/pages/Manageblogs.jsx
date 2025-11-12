@@ -10,8 +10,6 @@ function Manageblogs() {
       <BlogForm />
       <hr /><hr />
       <CSVUpload /><br />
-       {/* <DocxUpload />  */}
-
       <LogoutButton       />
     </div>
   );
