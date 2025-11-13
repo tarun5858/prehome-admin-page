@@ -38,7 +38,7 @@ const allowedOrigins = process.env.CORS_ORIGIN
         "http://localhost:5174",
         'http://localhost:5173',
         "https://manage-blogs.onrender.com",
-        "https://dynamic-website.onrender.com",
+        "https://dynamic-website-react.onrender.com",
         "https://dynamic-blog-server-g5ea.onrender.com"
     ];
 console.log("CORS Allowed Origins in Use:", allowedOrigins);
