@@ -102,7 +102,7 @@ export default function ChangePassword() {
     if (!res.ok) throw new Error(data.message);
 
     alert("Password updated successfully!");
-    setMsg("Password reset successful. You can now log in with your new password.");
+    setMsg("Password updated successfully. You can now log in with your new password.");
     setStep(1); // Go back to first step or login
   } catch (err) {
     console.error(err);
