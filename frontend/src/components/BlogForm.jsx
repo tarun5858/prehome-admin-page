@@ -110,7 +110,7 @@ const handleSubmit = async (e) => {
             window.location.hostname === '127.0.0.1';
 
         const BASE_URL = isLocal
-            ? "http://localhost:4000" // Backend runs on 4000 locally
+            ? "http://localhost:5000" // Backend runs on 5000 locally
             : import.meta.env.VITE_API_BASE_URL || "https://dynamic-blog-server.onrender.com";
 
         const apiUrl = `${BASE_URL}/api/blogs/manual`;
@@ -129,7 +129,7 @@ const handleSubmit = async (e) => {
         // Response handling
         if (res.ok) {
             // NOTE: Replace alert() with a modal/message box in a real app
-            alert("✅ Blog added successfully!"); 
+            alert("Blog added successfully!"); 
             setBlog(initialState);
         } else {
             let errorMessage = "Unknown error";
