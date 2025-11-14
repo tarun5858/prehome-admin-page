@@ -37,6 +37,9 @@ router.post("/login", async (req, res) => {
     // Load the latest admin credentials (including updated hash)
     const { adminUser, adminPassHash } = getAdminCredentials();
 
+    console.log("🔍 Loaded ADMIN_USER:", adminUser);
+console.log("🔍 Loaded HASH:", adminPassHash);
+
     // Match by full email or username before '@'
     if (username === adminUser || username === adminUser.split("@")[0]) {
       const isMatch = await bcrypt.compare(password, adminPassHash);
@@ -55,12 +58,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-console.log("🔍 Loaded ADMIN_USER:", adminUser);
-console.log("🔍 Loaded HASH:", adminPassHash);
-console.log("🔍 Comparing with username:", username);
-console.log("🔍 Raw password sent:", password);
-console.log("🔍 USERNAME SENT:", req.body.username);
-console.log("🔍 PASSWORD SENT:", req.body.password);
+
 
 // -------- Request OTP --------
 router.post("/request-reset", async (req, res) => {
