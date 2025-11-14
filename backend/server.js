@@ -28,8 +28,8 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET || "mySuperSecretKey";
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
+let adminPassHash = process.env.ADMIN_PASS_HASH || "$2b$10$6X24d5uZrgq5vrZthiY6JeAYgjUaN1onP9rKjmqUEp0F77/0b0/KO"; 
 // const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
-let adminPassHash = process.env.ADMIN_PASS_HASH || "$2b$10$w0X2YF.gE8S0tF/QY7N5iO5dG.K0x0fR.Z9pT"; 
 
 // Define the origins we MUST allow
 const allowedOrigins = process.env.CORS_ORIGIN
@@ -39,7 +39,8 @@ const allowedOrigins = process.env.CORS_ORIGIN
         'http://localhost:5173',
         "https://manage-blogs.onrender.com",
         "https://dynamic-website-react.onrender.com",
-        "https://dynamic-blog-server-g5ea.onrender.com"
+        "https://dynamic-blog-server-g5ea.onrender.com",
+        "https://dynamic-website-backend.onrender.com"
     ];
 console.log("CORS Allowed Origins in Use:", allowedOrigins);
 
