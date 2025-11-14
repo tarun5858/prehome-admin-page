@@ -16,6 +16,8 @@ import bcrypt from 'bcryptjs';
 import authRouter  from "./routes/auth.js"
 import  authRequired  from "./Middlewares/authMiddleware.js"
 import Blog from "./models/Blog.js"; 
+import slugify from "slugify";
+
 
 dotenv.config();
 console.log("RESEND_API_KEY loaded?", !!process.env.RESEND_API_KEY);
@@ -213,6 +215,21 @@ function authenticateToken(req, res, next) {
         next();
     });
 }
+async function generateUniqueSlug(title) {
+  let baseSlug = slugify(title, { lower: true, strict: true });
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (await Blog.exists({ slug })) {
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+
+  return slug;
+}
+
+
+
 // ----------------- ROUTES -----------------
 // health
 app.get("/api/secret", authRequired, (req, res) => {
