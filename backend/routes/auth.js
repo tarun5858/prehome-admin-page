@@ -11,6 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "CHANGE_THIS_SECRET";
 const signToken = (payload, opts = { expiresIn: "6h" }) =>
   jwt.sign(payload, JWT_SECRET, opts);
 
+
 // -------- Login --------
 // router.post("/login", async (req, res) => {
 //   const { username, password } = req.body;
@@ -53,6 +54,13 @@ router.post("/login", async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
+
+console.log("🔍 Loaded ADMIN_USER:", adminUser);
+console.log("🔍 Loaded HASH:", adminPassHash);
+console.log("🔍 Comparing with username:", username);
+console.log("🔍 Raw password sent:", password);
+console.log("🔍 USERNAME SENT:", req.body.username);
+console.log("🔍 PASSWORD SENT:", req.body.password);
 
 // -------- Request OTP --------
 router.post("/request-reset", async (req, res) => {
