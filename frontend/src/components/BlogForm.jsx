@@ -106,16 +106,15 @@ const handleSubmit = async (e) => {
     try {
         // === CRITICAL FIX: Base URL Selection ===
         // Determine the environment. If the frontend is running on localhost, use the local backend port.
-        // const isLocal = 
-        //     window.location.hostname === 'localhost' || 
-        //     window.location.hostname === '127.0.0.1';
+        const isLocal = 
+            window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1';
 
-        // const BASE_URL = isLocal
-        //     ? "http://localhost:5000" // Backend runs on 5000 locally
-        //     : import.meta.env.VITE_API_BASE_URL || "https://dynamic-blog-server.onrender.com";
+        const BASE_URL = isLocal
+            ? "http://localhost:5000" // Backend runs on 5000 locally
+            : import.meta.env.VITE_API_BASE_URL || "https://dynamic-blog-server.onrender.com";
 
-        // const apiUrl = `${BASE_URL}/api/blogs/manual`;
-        const apiUrl = `https://dynamic-blog-server.onrender.com/api/blogs/manual`;
+        const apiUrl = `${BASE_URL}/api/blogs/manual`;
         console.log(" Posting to:", apiUrl);
 
         // === CRITICAL BUG FIX: Correct JSON.stringify usage ===
