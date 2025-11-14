@@ -266,16 +266,33 @@ app.get("/api/blogs/:identifier", async (req, res) => {
 });
 
 // Public: manual blog post (used by admin form if unprotected)
+// app.post("/api/blogs/manual", async (req, res) => {
+//     try {
+//         const blog = new Blog(req.body);
+//         if (!blog.slug && blog.title) blog.slug = slugify(blog.title);
+//         await blog.save();
+//         res.status(201).json({ message: "Blog created successfully (manual form)", blog });
+//     } catch (err) {
+//         console.error("POST /api/blogs/manual error:", err);
+//         res.status(400).json({ message: err.message || "Bad request" });
+//     }
+// });
 app.post("/api/blogs/manual", async (req, res) => {
-    try {
-        const blog = new Blog(req.body);
-        if (!blog.slug && blog.title) blog.slug = slugify(blog.title);
-        await blog.save();
-        res.status(201).json({ message: "Blog created successfully (manual form)", blog });
-    } catch (err) {
-        console.error("POST /api/blogs/manual error:", err);
-        res.status(400).json({ message: err.message || "Bad request" });
+  try {
+    let data = req.body;
+
+    if (!data.slug && data.title) {
+      data.slug = await generateUniqueSlug(data.title);
     }
+
+    const blog = new Blog(data);
+    await blog.save();
+
+    res.status(201).json({ message: "Blog created", blog });
+  } catch (err) {
+    console.error("POST /api/blogs/manual error:", err);
+    res.status(400).json({ message: err.message });
+  }
 });
 
 // Protected create (recommended) - uses JWT
