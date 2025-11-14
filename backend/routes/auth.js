@@ -41,7 +41,7 @@ router.post("/login", async (req, res) => {
 console.log("🔍 Loaded HASH:", adminPassHash);
 
     // Match by full email or username before '@'
-    if (username === adminUser || username === adminUser.split("@")[0]) {
+    if (adminUser && (username === adminUser || username === adminUser.split("@")[0])) {
       const isMatch = await bcrypt.compare(password, adminPassHash);
       if (isMatch) {
         const token = signToken({ username: adminUser });
