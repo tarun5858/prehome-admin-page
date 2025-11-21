@@ -1,6 +1,11 @@
 // server.js (ESM - FINAL MANUAL CORS INJECTION)
+console.log("🔥 SERVER FILE EXECUTED");
+console.log("🔥 DIRNAME:", process.cwd());
+console.log("🔥 FILENAME:", import.meta.url);
 
-import dotenv from "dotenv";
+import dotenv from "dotenv"
+dotenv.config();
+
 import express from "express";
 // We no longer need the standard 'cors' library, but keep the import if other packages rely on it, 
 // though we will replace its usage with manual middleware below.
@@ -16,10 +21,17 @@ import bcrypt from 'bcryptjs';
 import authRouter  from "./routes/auth.js"
 import  authRequired  from "./Middlewares/authMiddleware.js"
 import Blog from "./models/Blog.js"; 
-import slugify from "slugify";
+;
+// import slugify from "slugify";
 
 
-dotenv.config();
+
+
+console.log("🟢 ENV LOADED:", {
+  ADMIN_USER: process.env.ADMIN_USER,
+  ADMIN_PASS_HASH: process.env.ADMIN_PASS_HASH,
+});
+
 console.log("RESEND_API_KEY loaded?", !!process.env.RESEND_API_KEY);
 
 const app = express();
@@ -30,8 +42,19 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 const JWT_SECRET = process.env.JWT_SECRET || "mySuperSecretKey";
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
-let adminPassHash = process.env.ADMIN_PASS_HASH || "$2b$10$6X24d5uZrgq5vrZthiY6JeAYgjUaN1onP9rKjmqUEp0F77/0b0/KO"; 
+const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH || "$2b$10$6X24d5uZrgq5vrZthiY6JeAYgjUaN1onP9rKjmqUEp0F77/0b0/KO"; 
+// let adminPassHash = process.env.ADMIN_PASS_HASH || "$2b$10$6X24d5uZrgq5vrZthiY6JeAYgjUaN1onP9rKjmqUEp0F77/0b0/KO"; 
+// const ADMIN_PASS_HASH = process.env.ADMIN_PASS || "admin123";
 // const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
+
+
+
+console.log("🔍 Loaded ADMIN_USER:", process.env.ADMIN_USER);
+console.log("🔍 Loaded HASH:", process.env.ADMIN_PASS_HASH);
+bcrypt.compare("admin123", "$2b$10$6X24d5uZrgq5vrZthiY6JeAYgjUaN1onP9rKjmqUEp0F77/0b0/KO")
+  .then(console.log)
+
+  app.use("/api/auth", authRouter);
 
 // Define the origins we MUST allow
 const allowedOrigins = process.env.CORS_ORIGIN
@@ -65,18 +88,57 @@ console.log("CORS Allowed Origins in Use:", allowedOrigins);
 //   })
 // );
 
-app.use(cors({
-  origin: function(origin, callback) {
-    // allow requests like Postman or curl with no origin
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    console.warn("Blocked by CORS:", origin);
-    return callback(new Error("Not allowed by CORS"));
-  },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
+
+// using this
+// app.use(cors({
+//   origin: function(origin, callback) {
+//     // allow requests like Postman or curl with no origin
+//     if (!origin) return callback(null, true);
+//     if (allowedOrigins.includes(origin)) return callback(null, true);
+//     console.warn("Blocked by CORS:", origin);
+//     return callback(new Error("Not allowed by CORS"));
+//   },
+//   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//   allowedHeaders: ["Content-Type", "Authorization"],
+//   credentials: true,
+// }));
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean)
+    : [
+        "http://localhost:5174",
+        "http://localhost:5173",
+        "https://manage-blogs.onrender.com",
+        "https://dynamic-website-react.onrender.com",
+        "https://dynamic-blog-server-g5ea.onrender.com",
+        "https://dynamic-website-backend.onrender.com"
+      ];
+
+  // Log origin + allowedOrigins to debug
+  console.log("🔵 Incoming Request Origin:", origin);
+  console.log("🟢 Allowed Origins:", allowedOrigins);
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  );
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 app.options("*", cors());
 
@@ -84,7 +146,7 @@ app.options("*", cors());
 app.use(express.json({ limit: "8mb" })); 
 
 
-app.use("/api/auth", authRouter);
+
 
 // ----------------- MIDDLEWARE (Order is CRITICAL - TOP PRIORITY) -----------------
 
@@ -263,6 +325,7 @@ app.get("/api/blogs", async (req, res) => {
     }
 });
 
+
 // Public: get single by id or slug
 app.get("/api/blogs/:identifier", async (req, res) => {
     try {
@@ -398,30 +461,63 @@ app.post("/api/upload", authenticateToken, upload.single("csv"), (req, res) => {
 });
 
 // Login endpoint
-// app.post("/api/login",authenticateToken, (req, res) => {
-//     const { username, password } = req.body;
-//     if (!username || !password) return res.status(400).json({ success: false, message: "Username and password required" });
-
-//     if (username === ADMIN_USER && password === ADMIN_PASS_HASH) {
-//         const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "6h" });
-//         return res.json({ success: true, token });
-//     }
-//     return res.status(401).json({ success: false, message: "Invalid credentials" });
-// });
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/login",authenticateToken, (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ success: false, message: "Username and password required" });
 
-    if (username === ADMIN_USER) {
-        // CRITICAL: Use bcrypt.compare() to check the plaintext password against the stored hash
-        const isMatch = await bcrypt.compare(password, adminPassHash);
+    if (username === ADMIN_USER && password === ADMIN_PASS_HASH) {
+        const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "6h" });
+        return res.json({ success: true, token });
+    }
+    return res.status(401).json({ success: false, message: "Invalid credentials" });
+});
 
+
+// app.post("/api/auth/login", async (req, res) => {
+//     const { username, password } = req.body;
+    
+//         console.log("Login Attempt:", { username, password });
+// console.log("Expected User:", ADMIN_USER);
+// console.log("Expected Hash:", adminPassHash);
+
+//     if (!username || !password) return res.status(400).json({ success: false, message: "Username and password required" });
+
+
+//     if (username === ADMIN_USER) {
+//         // CRITICAL: Use bcrypt.compare() to check the plaintext password against the stored hash
+//         const isMatch = await bcrypt.compare(password, adminPassHash);
+
+//         if (isMatch) {
+//             const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "6h" });
+//             return res.json({ success: true, token });
+//         }
+//     }
+
+//     // Generic failure message for security
+//     return res.status(401).json({ success: false, message: "Invalid credentials" });
+// });
+
+app.post("/api/auth/login", async (req, res) => {
+    const { username, password } = req.body;
+
+    console.log("Login Attempt:", { username, password });
+    
+    console.log("Expected User:", ADMIN_USER);
+    console.log("Expected Hash:", ADMIN_PASS_HASH);
+     console.log("LOGIN BODY:", req.body);
+
+    if (!username || !password)
+        return res.status(400).json({ success: false, message: "Username and password required" });
+
+    if (username === ADMIN_USER) {
+        const isMatch = await bcrypt.compare(password, ADMIN_PASS_HASH);
+        console.log("BCRYPT MATCH RESULT:", isMatch);
         if (isMatch) {
-            const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "6h" });
+            const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "6h" });
             return res.json({ success: true, token });
         }
     }
-    // Generic failure message for security
+
     return res.status(401).json({ success: false, message: "Invalid credentials" });
 });
 
@@ -460,8 +556,6 @@ app.post("/api/admin/change-password", authenticateToken, async (req, res) => {
     });
 });
 
-
-
 // Protected test endpoint
 app.get("/api/secure-blogs", authenticateToken, (req, res) => {
     res.json({ message: "Protected data", user: req.user });
@@ -485,6 +579,7 @@ mongoose
         console.error(" MongoDB connection error:", err.message || err);
         process.exit(1); 
     });
+
 
 
 

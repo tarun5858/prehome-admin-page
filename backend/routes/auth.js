@@ -1,7 +1,9 @@
+
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../utils/sendEmail.js";
+
 const router = express.Router();
 const otpStore = {}; // In-memory OTP store for testing
 import { getAdminCredentials, updateAdminPassword } from "../utils/adminConfig.js";
@@ -28,36 +30,45 @@ const signToken = (payload, opts = { expiresIn: "6h" }) =>
 
 //   return res.status(401).json({ message: "Invalid credentials" });
 // });
+// router.post("/login", async (req, res) => {
+//   try {
+//     const { username, password } = req.body;
+//     if (!username || !password)
+//       return res.status(400).json({ message: "Username & password required" });
+
+//     // Load the latest admin credentials (including updated hash)
+//     const { adminUser, adminPassHash } = getAdminCredentials();
+
+//     console.log("🔍 Loaded ADMIN_USER:", adminUser);
+// console.log("🔍 Loaded HASH:", adminPassHash);
+
+//     // Match by full email or username before '@'
+//     if (adminUser && (username === adminUser || username === adminUser.split("@")[0])) {
+//       const isMatch = await bcrypt.compare(password, adminPassHash);
+//       if (isMatch) {
+//         const token = signToken({ username: adminUser });
+//         return res.json({ success: true, token });
+//       } else {
+//         return res.status(401).json({ success: false, message: "Invalid credentials" });
+//       }
+//     }
+
+//     return res.status(401).json({ success: false, message: "Invalid credentials" });
+//   } catch (err) {
+//     console.error("Login error:", err);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// });
 router.post("/login", async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    if (!username || !password)
-      return res.status(400).json({ message: "Username & password required" });
+  const { username, password } = req.body;
 
-    // Load the latest admin credentials (including updated hash)
-    const { adminUser, adminPassHash } = getAdminCredentials();
-
-    console.log("🔍 Loaded ADMIN_USER:", adminUser);
-console.log("🔍 Loaded HASH:", adminPassHash);
-
-    // Match by full email or username before '@'
-    if (adminUser && (username === adminUser || username === adminUser.split("@")[0])) {
-      const isMatch = await bcrypt.compare(password, adminPassHash);
-      if (isMatch) {
-        const token = signToken({ username: adminUser });
-        return res.json({ success: true, token });
-      } else {
-        return res.status(401).json({ success: false, message: "Invalid credentials" });
-      }
-    }
-
-    return res.status(401).json({ success: false, message: "Invalid credentials" });
-  } catch (err) {
-    console.error("Login error:", err);
-    return res.status(500).json({ message: "Server error" });
+  // TEMPORARY BYPASS — REMOVE LATER
+  if (username === "admin" && password === "admin123") {
+    return res.json({ success: true, token: "temp-dev-token" });
   }
-});
 
+  return res.status(401).json({ error: "Invalid credentials" });
+});
 
 
 // -------- Request OTP --------
