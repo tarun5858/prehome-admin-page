@@ -3,7 +3,6 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Manageblogs from "./pages/Manageblogs";
-// import ChangePassword from "./components/ChangePassword";
 import ChangePassword from "./pages/ChangePassword";
 function App() {
   return (

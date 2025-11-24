@@ -1,7 +1,7 @@
 // server.js (ESM - FINAL MANUAL CORS INJECTION)
-console.log("🔥 SERVER FILE EXECUTED");
-console.log("🔥 DIRNAME:", process.cwd());
-console.log("🔥 FILENAME:", import.meta.url);
+console.log(" SERVER FILE EXECUTED");
+console.log(" DIRNAME:", process.cwd());
+console.log(" FILENAME:", import.meta.url);
 
 import dotenv from "dotenv"
 dotenv.config();
@@ -27,7 +27,7 @@ import Blog from "./models/Blog.js";
 
 
 
-console.log("🟢 ENV LOADED:", {
+console.log(" ENV LOADED:", {
   ADMIN_USER: process.env.ADMIN_USER,
   ADMIN_PASS_HASH: process.env.ADMIN_PASS_HASH,
 });
@@ -49,8 +49,8 @@ const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH || "$2b$10$6X24d5uZrgq5vrZth
 
 
 
-console.log("🔍 Loaded ADMIN_USER:", process.env.ADMIN_USER);
-console.log("🔍 Loaded HASH:", process.env.ADMIN_PASS_HASH);
+console.log(" Loaded ADMIN_USER:", process.env.ADMIN_USER);
+console.log(" Loaded HASH:", process.env.ADMIN_PASS_HASH);
 bcrypt.compare("admin123", "$2b$10$6X24d5uZrgq5vrZthiY6JeAYgjUaN1onP9rKjmqUEp0F77/0b0/KO")
   .then(console.log)
 
@@ -117,8 +117,8 @@ app.use((req, res, next) => {
       ];
 
   // Log origin + allowedOrigins to debug
-  console.log("🔵 Incoming Request Origin:", origin);
-  console.log("🟢 Allowed Origins:", allowedOrigins);
+  console.log(" Incoming Request Origin:", origin);
+  console.log(" Allowed Origins:", allowedOrigins);
 
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);

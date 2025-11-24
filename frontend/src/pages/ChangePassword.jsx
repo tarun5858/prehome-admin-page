@@ -2,7 +2,7 @@
 import { useState } from "react";
 import {  Link } from "react-router-dom";
 export default function ChangePassword() {
-  const [email, setEmail] = useState("tarun.ccl19@gmail.com"); // prefill
+  const [email, setEmail] = useState(""); // prefill
   const [step, setStep] = useState(1); // 1=request,2=verify,3=reset
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -69,7 +69,7 @@ export default function ChangePassword() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Invalid OTP");
        alert("OTP Verified");
-    console.log("Received token:", data.resetToken); // 👀 Check here
+    console.log("Received token:", data.resetToken); // Check here
     setResetToken(data.resetToken);
       setMsg("OTP verified");
       setStep(3);
