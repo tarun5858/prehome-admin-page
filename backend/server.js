@@ -20,9 +20,10 @@ import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import authRouter  from "./routes/auth.js"
 import  authRequired  from "./Middlewares/authMiddleware.js"
+import slugify from "slugify";
 import Blog from "./models/Blog.js"; 
-;
-// import slugify from "slugify";
+
+
 
 
 
@@ -211,13 +212,13 @@ if (!MONGO_URI) {
 
 
 // ----------------- HELPER FUNCTIONS / AUTH MIDDLEWARE -----------------
-function slugify(text = "") {
-    return String(text)
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, "")
-        .replace(/\s+/g, "-");
-}
+// function slugify(text = "") {
+//     return String(text)
+//         .toLowerCase()
+//         .trim()
+//         .replace(/[^\w\s-]/g, "")
+//         .replace(/\s+/g, "-");
+// }
 
 function reconstructNestedObject(flatObj) {
     const result = {};
