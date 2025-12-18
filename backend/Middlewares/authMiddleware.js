@@ -7,6 +7,9 @@ const authRequired = (req, res, next) => {
   const token = auth.split(" ")[1];
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
+    if (payload.username !== process.env.ADMIN_USER) {
+        return res.status(403).json({ message: "Access denied: Not an admin" });
+    }
     req.user = payload;
     next();
   } catch (err) {

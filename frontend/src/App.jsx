@@ -3,7 +3,9 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Manageblogs from "./pages/Manageblogs";
+import LeadsDashboard from "./components/LeadsDashboard";
 import ChangePassword from "./pages/ChangePassword";
+import AdminHome from "./pages/AdminHome";
 function App() {
   return (
     <AuthProvider>
@@ -12,6 +14,15 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/change-password" element={<ChangePassword />} />
 
+{/* New Admin Hub Route */}
+          <Route
+            path="/admin-home"
+            element={
+              <ProtectedRoute>
+                <AdminHome />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/manage-blogs"
             element={
@@ -21,6 +32,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/leads-dashboard"
+            element={
+              <ProtectedRoute>
+                {" "}
+                <LeadsDashboard />{" "}
+              </ProtectedRoute>
+            }
+          />
+
            <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>

@@ -38,10 +38,20 @@ function Login() {
       const data = await res.json();
       console.log("API Response:", data);
 
+      // if (res.ok && data.token) {
+      //   login(data.token); // store token in context/localStorage
+      //   navigate("/admin-home");
+      // } 
       if (res.ok && data.token) {
-        login(data.token); // store token in context/localStorage
-        navigate("/manage-blogs");
-      } else {
+    // 1. Force save to localStorage immediately to avoid race conditions
+    localStorage.setItem("token", data.token); 
+    
+    // 2. Update your AuthContext
+    login(data.token); 
+    
+    // 3. Navigate to Hub
+    navigate("/admin-home");
+}else {
         alert(data.message || "Invalid credentials");
       }
     } catch (err) {

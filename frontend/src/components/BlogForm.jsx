@@ -218,6 +218,11 @@ function BlogForm() {
   // --- Submission Handler ---
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) {
+    alert("Your session has expired. Please login again.");
+    return;
+  }
 
     // 1. Defensively assign values to ensure they are strings
     const safeTopics = blog.topic || "";
@@ -265,13 +270,15 @@ function BlogForm() {
           "https://dynamic-blog-server.onrender.com";
 
       // IMPORTANT: Use the correct API path for POSTing the new blog
-      const apiUrl = `${BASE_URL}/api/blogs/manual`; // Assuming this is your creation endpoint
+      const apiUrl = `${BASE_URL}/api/blogs`; // Assuming this is your creation endpoint
       console.log("Posting blog to:", apiUrl);
 
+      const token = localStorage.getItem('token');
       const res = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(payload), // Send the prepared JSON payload
       });
