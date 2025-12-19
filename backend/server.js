@@ -156,25 +156,23 @@ app.get('/api/data/:collectionName', authenticateToken, async (req, res) => {
 
 
 
-
 // 1. Setup __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 2. Define the path to your frontend 'dist' folder
-// This looks 'up' out of the backend folder and 'down' into frontend/dist
-const frontendPath = path.join(__dirname, '../frontend/dist');
+// 2. Point to the dist folder properly (Go UP one level, then into frontend/dist)
+const frontendPath = path.resolve(__dirname, '..', 'frontend', 'dist');
 
-// 3. Serve the static files (CSS, JS, Images)
+// 3. LOG IT (Crucial for debugging!)
+console.log("Looking for static files in:", frontendPath);
+
+// 4. Serve the static files
 app.use(express.static(frontendPath));
 
-// 4. Handle React routing (Catch-all)
-// This ensures that if you refresh on /login, it still works
+// 5. Catch-all for React Router
 app.get('*', (req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
-
-
 
 // --- SERVER START ---
 blogConn.on('connected', () => console.log(' Connected to Blog Database'));
