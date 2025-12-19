@@ -33,16 +33,29 @@ const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH;
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
-  "https://manage-blogs.onrender.com"
+  "https://prehome-admin-page.onrender.com"
 ];
 
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     if (!origin || allowedOrigins.includes(origin)) callback(null, true);
+//     else callback(new Error('Not allowed by CORS'));
+//   },
+//   credentials: true
+// }));
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) callback(null, true);
-    else callback(new Error('Not allowed by CORS'));
+    // If there is no origin (like a same-site request) or if it's in our list, allow it
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("Blocked by CORS:", origin); // This helps you see exactly what URL is failing
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   credentials: true
 }));
+
 
 app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true }));
