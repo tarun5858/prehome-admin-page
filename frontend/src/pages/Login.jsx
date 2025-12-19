@@ -30,7 +30,8 @@ function Login() {
       //   }
       // );
 
-      const res = await fetch(`${BASE_URL}/api/auth/login`, {
+      const BASE_URL = "/api";
+      const res = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

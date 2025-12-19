@@ -182,6 +182,12 @@ console.log("Looking for static files in:", frontendPath);
 // 4. Serve the static files
 app.use(express.static(frontendPath));
 
+
+// Handle API 404s specifically (Prevents sending HTML for failed API calls)
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: "API route not found" });
+});
+
 // 5. Catch-all for React Router
 app.get('*', (req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
