@@ -267,7 +267,7 @@ function BlogForm() {
       const BASE_URL = isLocal
         ? "http://localhost:5000" // Adjust port if needed
         : import.meta.env.VITE_API_BASE_URL ||
-          "https://dynamic-blog-server.onrender.com";
+          "https://prehome-admin-page.onrender.com";
 
       // IMPORTANT: Use the correct API path for POSTing the new blog
       const apiUrl = `${BASE_URL}/api/blogs`; // Assuming this is your creation endpoint
