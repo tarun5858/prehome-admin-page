@@ -48,17 +48,6 @@ app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const frontendBuildPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendBuildPath));
-
-// Handle React Routing (for any non-API routes)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendBuildPath, 'index.html'));
-});
-
 
 // 1. Clean the base URI to ensure we don't have trailing slashes or existing DB names
 const BASE_URI = process.env.MONGO_URI.split('?')[0]; // Gets everything before '?'
@@ -164,6 +153,28 @@ app.get('/api/data/:collectionName', authenticateToken, async (req, res) => {
     res.status(200).json({ success: true, leads });
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
+
+
+
+
+// 1. Setup __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 2. Define the path to your frontend 'dist' folder
+// This looks 'up' out of the backend folder and 'down' into frontend/dist
+const frontendPath = path.join(__dirname, '../frontend/dist');
+
+// 3. Serve the static files (CSS, JS, Images)
+app.use(express.static(frontendPath));
+
+// 4. Handle React routing (Catch-all)
+// This ensures that if you refresh on /login, it still works
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+
 
 // --- SERVER START ---
 blogConn.on('connected', () => console.log(' Connected to Blog Database'));
