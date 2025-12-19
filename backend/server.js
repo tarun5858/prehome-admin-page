@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 import path from "path";
 // import fs from "fs";
 import jwt from "jsonwebtoken";
-// import { fileURLToPath } from "url";
+import { fileURLToPath } from "url";
 import bcrypt from "bcryptjs";
 import slugify from "slugify";
 
@@ -48,15 +48,15 @@ app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 
-// 1. Point to the "dist" folder (Vite's build output)
-const frontendPath = path.join(__dirname, "../frontend/dist"); 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// 2. Serve the static files
-app.use(express.static(frontendPath));
+const frontendBuildPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendBuildPath));
 
-// 3. Handle SPA routing (Send index.html for any non-API request)
-app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
+// Handle React Routing (for any non-API routes)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendBuildPath, 'index.html'));
 });
 
 
