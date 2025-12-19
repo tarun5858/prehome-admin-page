@@ -35,7 +35,7 @@ const LeadsDashboard = () => {
   const [error, setError] = useState('');
 
   // Use your actual backend URL here
-  const API_BASE_URL = 'http://localhost:5000'; 
+  const API_BASE_URL = 'https://prehome-admin-page.onrender.com'; 
 
   const fetchLeads = useCallback(async (collection) => {
     setLoading(true);
